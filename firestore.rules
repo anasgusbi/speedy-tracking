@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== الصلاحيات =====
+    // صاحب المنصة: مدير دائماً ولا يمكن إزالة صلاحيته
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'anasgusbi016@gmail.com';
+    }
+    // المديرون والمشرفون محفوظون في config/roles ويُدارون من داخل المنصة
+    function inRole(r) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/config/roles)
+        && request.auth.token.email in get(/databases/$(database)/documents/config/roles).data.get(r, []);
+    }
+    function isManager() { return isOwner() || inRole('managers'); }
+    function isStaff()   { return isManager() || inRole('supervisors'); }
+
+    // المندوب: حساب تطبيق الهاتف المربوط بمندوب في driverAccounts
+    function isDriver() {
+      return request.auth != null && request.auth.token.email != null
+        && exists(/databases/$(database)/documents/driverAccounts/$(request.auth.token.email));
+    }
+    function myDriverId() {
+      return get(/databases/$(database)/documents/driverAccounts/$(request.auth.token.email)).data.driverId;
+    }
+    // المندوب يسجّل بدء/إنهاء فترته هو فقط في مستند اليوم
+    function driverDayWriteOk() {
+      let did = myDriverId();
+      let before = resource == null ? {} : resource.data;
+      let after = request.resource.data;
+      return after.diff(before).affectedKeys().hasOnly(['recs'])
+        && after.recs.diff(before.get('recs', {})).affectedKeys().hasOnly(['m_' + did, 'e_' + did]);
+    }
+
+    // ===== المستندات =====
+    match /config/roles {
+      allow read: if isStaff();
+      allow write: if isManager();
+    }
+    match /config/settings {
+      allow read: if isStaff() || isDriver();
+      allow write: if isManager();
+    }
+    match /driverAccounts/{email} {
+      allow read: if isStaff() || (request.auth != null && request.auth.token.email == email);
+      allow write: if isManager();
+    }
+    match /drivers/{driverId} {
+      allow read, create, update: if isStaff();
+      allow get: if isDriver() && myDriverId() == driverId;
+      allow delete: if isManager();
+    }
+    match /days/{day} {
+      allow read, write: if isStaff();
+      allow get: if isDriver();
+      allow create, update: if isDriver() && driverDayWriteOk();
+    }
+  }
+}

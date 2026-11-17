@@ -1,0 +1,40 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "staff": {
+      ".read": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).exists())",
+      "$ek": {
+        ".write": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).val() === 'manager')",
+        ".validate": "newData.val() === 'manager' || newData.val() === 'supervisor'"
+      }
+    },
+    "driverOf": {
+      ".read": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).exists())",
+      "$ek": {
+        ".read": "auth != null && auth.token.email.replace('.', ',') === $ek",
+        ".write": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).val() === 'manager')",
+        ".validate": "newData.isString()"
+      }
+    },
+    "live": {
+      ".read": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).exists())",
+      "$did": {
+        ".write": "(auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).val() === 'manager')) || (auth != null && root.child('driverOf').child(auth.token.email.replace('.', ',')).val() === $did)",
+        ".validate": "newData.hasChildren(['lat', 'lng', 't'])"
+      }
+    },
+    "tracks": {
+      ".read": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).exists())",
+      "$did": {
+        ".write": "auth != null && (auth.token.email === 'anasgusbi016@gmail.com' || root.child('staff').child(auth.token.email.replace('.', ',')).val() === 'manager')",
+        "$day": {
+          "$pt": {
+            ".write": "auth != null && root.child('driverOf').child(auth.token.email.replace('.', ',')).val() === $did",
+            ".validate": "newData.hasChildren(['lat', 'lng', 't'])"
+          }
+        }
+      }
+    }
+  }
+}

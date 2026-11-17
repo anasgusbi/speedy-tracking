@@ -1,0 +1,18 @@
+{
+  "name": "سبيدي | تتبع المندوبين",
+  "short_name": "تتبع سبيدي",
+  "description": "خريطة مباشرة ومسارات وفترات مندوبي سبيدي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e0c",
+  "theme_color": "#0a0e0c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
